@@ -1,4 +1,5 @@
-caffeine = hs.menubar.new()
+-- 2nd arg to hs.menubar.new defines an 'autosaveName' that allows menu bar item to remember position
+caffeine = hs.menubar.new(true, 'caffeine')
 
 IconActiveWhite = hs.image.imageFromPath("~/.hammerspoon/assets/CaffeineActiveWhite.png")
 IconInactiveWhite = hs.image.imageFromPath("~/.hammerspoon/assets/CaffeineInactiveWhite.png")
