@@ -25,3 +25,7 @@ if caffeine then
     caffeine:setClickCallback(caffeineClicked)
     setCaffeineDisplay(hs.caffeinate.get("displayIdle"))
 end
+
+hs.hotkey.bind({ "ctrl", "cmd", "alt" }, "1", function()
+    setCaffeineDisplay(hs.caffeinate.toggle("displayIdle"))
+end)
