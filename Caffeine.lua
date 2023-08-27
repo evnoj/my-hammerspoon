@@ -1,9 +1,18 @@
 caffeine = hs.menubar.new()
+
+IconActiveWhite = hs.image.imageFromPath("~/.hammerspoon/assets/CaffeineActiveWhite.png")
+IconInactiveWhite = hs.image.imageFromPath("~/.hammerspoon/assets/CaffeineInactiveWhite.png")
+
+IconActiveWhite = IconActiveWhite:setSize({w=22,h=22})
+IconInactiveWhite = IconInactiveWhite:setSize({w=22,h=22})
+
 function setCaffeineDisplay(state)
     if state then
-        caffeine:setTitle("AWAKE")
+        -- caffeine:setTitle("AWAKE")
+        caffeine:setIcon(IconActiveWhite)
     else
-        caffeine:setTitle("SLEEPY")
+        -- caffeine:setTitle("SLEEPY")
+        caffeine:setIcon(IconInactiveWhite)
     end
 end
 
