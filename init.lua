@@ -1,2 +1,2 @@
 local CloseNotifications = require('CloseNotifications')
-local Caffeine = require('Caffeine')
+-- local Caffeine = require('Caffeine')
