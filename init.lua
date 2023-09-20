@@ -1,5 +1,6 @@
 local CloseNotifications = require('CloseNotifications')
 local Caffeine = require('Caffeine')
+local ReloadConfig = require('ReloadConfig')
 -- local ConfigAutoLoad = require('ConfigAutoLoad')
 -- local DoubleTapCmd = require('DoubleTapCmd')
 -- local scratchpad = require('scratchpad')
