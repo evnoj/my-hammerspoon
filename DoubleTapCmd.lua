@@ -34,7 +34,7 @@ end
 --  flagsChanged with all = false
 
 
-local timeFirstControl, firstDown, secondDown = 0, false, false
+local timeInitiate, stage = 0, 0
 
 -- verify that no keyboard flags are being pressed
 local noFlags = function(ev)
@@ -61,7 +61,7 @@ local onlyKey = function(ev)
 end
 
 local function reset()
-    timeFirstControl, firstDown, secondDown = 0, false, false
+    timeFirstControl, stage= 0, 0
 end
 
 -- the actual workhorse
