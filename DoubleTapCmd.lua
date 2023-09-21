@@ -13,14 +13,15 @@ local events   = eventtap.event.types
 --    do something special
 -- end
 
--- key we want to detect
-key            = "cmd"
+-- keycode we want to detect, from hs.keycodes.map
+originalKeyCode = 54 -- rightcmd
+replacementKeyCode = 59 -- ctrl
 
 -- how quickly must the two single ctrl taps occur?
-timeFrame      = .5
+timeFrame = .5
 
 -- what to do when the double tap of ctrl occurs
-action         = function()
+action = function()
     notify.new({ title = "Hammerspoon", informativeText = key .. " double tap detected" }):send()
 end
 
@@ -61,48 +62,32 @@ local onlyKey = function(ev)
 end
 
 local function reset()
-    timeFirstControl, stage= 0, 0
+    timeInitiate, stage = nil, nil
 end
 
 -- the actual workhorse
 
 eventWatcher = eventtap.new({ events.flagsChanged, events.keyDown }, function(ev)
-    if ev:getType() == events.flagsChanged then
-        -- if it's been too long; previous state doesn't matter
-        if not secondDown and (timer.secondsSinceEpoch() - timeFirstControl) > timeFrame then
-            timeFirstControl, firstDown, secondDown = 0, false, false
-        end
-        if noFlags(ev) and firstDown and secondDown then -- key up and we've seen two, so do action
-            hs.alert.show("double tap lifted")
-            -- if action then action() end
-            -- local newEvent = hs.eventtap.event.newKeyEvent(hs.keycodes.map["ctrl"], true)
-            -- newEvent:setType(hs.eventtap.event.types.keyUp)
-            -- newEvent:setFlags(event:getFlags())
-
-            -- -- Post the "B" key event
-            -- newEvent:post()
-            reset()
-            -- return true
-        elseif not noFlags(ev) and onlyKey(ev) then
-            if not firstDown then -- ctrl down and it's a first
-                firstDown = true
-                timeFirstControl = timer.secondsSinceEpoch()
-            else -- ctrl down and it's the second
-                secondDown = true
-                hs.alert.show("double tap activated")
-                -- local newEvent = hs.eventtap.event.newKeyEvent(hs.keycodes.map["ctrl"], true)
-                -- newEvent:setType(hs.eventtap.event.types.keyDown)
-                -- newEvent:setFlags(event:getFlags())
-
-                -- -- Post the "B" key event
-                -- newEvent:post()
-                -- return true
-            end
-        elseif not noFlags(ev) then -- otherwise reset and start over
-            reset()
-        end
-    else -- it was a key press, so not a lone ctrl char -- we don't care about it
+    -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if a non-modifer key is pressed or if the time between presses exceeds the threshold
+    if stage and stage ~= 3 and (ev:getType() == events.keyDown or timer.secondsSinceEpoch() - timeInitiate > timeFrame) then
         reset()
+    elseif ev:getKeyCode() == originalKeyCode then
+        if not stage then
+            timeInitiate = timer.secondsSinceEpoch()
+            stage = 1 -- first press down
+        elseif stage == 1 then
+            stage = 2 -- lift up from first press
+        elseif stage == 2 then
+            stage = 3 -- second press down, activate alternative modifier
+            hs.alert.show("double tap activated")
+            hs.eventtap.event.newKeyEvent(59, true):post()
+            return true
+        elseif stage == 3 then
+            hs.eventtap.event.newKeyEvent(59, false):post()
+            reset() -- lift after double-tap was activated, reset to start
+            hs.alert.show("double tap lifted")
+            return true
+        end
     end
     return false
 end):start()
