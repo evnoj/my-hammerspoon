@@ -5,14 +5,17 @@ local events   = eventtap.event.types
 local originalKeyCode = 54 -- rightcmd
 local replacementKeyCode = 59 -- ctrl
 local timeFrame = .5
-local timeInitiate, stage = 0, 0
+local timeInitiate, stage = nil, nil
 
 local function reset()
     timeInitiate, stage = nil, nil
 end
 
--- the actual workhorse
-
+-- the watcher revolves around setting the current 'stage' of the the double key press, and taking appropriate action based on the press made, the current stage, and the time since the stage cycle was initiated. the stage cycle is:
+-- stage = nil, inactive
+-- stage = 1, key pressed down first time
+-- stage = 2, key lifted first time
+-- stage = 3, key pressed down second time. once key is lifted while in stage 3, then stage = nil
 eventWatcher = eventtap.new({ events.flagsChanged, events.keyDown }, function(ev)
     -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if a non-modifer key is pressed or if the time between presses exceeds the threshold
     if stage and stage ~= 3 and (ev:getType() == events.keyDown or timer.secondsSinceEpoch() - timeInitiate > timeFrame) then
@@ -25,16 +28,14 @@ eventWatcher = eventtap.new({ events.flagsChanged, events.keyDown }, function(ev
             stage = 2 -- lift up from first press
         elseif stage == 2 then
             stage = 3 -- second press down, activate alternative modifier
-            hs.alert.show("double tap activated")
-            hs.eventtap.event.newKeyEvent(59, true):post()
+            eventtap.event.newKeyEvent(59, true):post()
             return true
         elseif stage == 3 then
-            hs.eventtap.event.newKeyEvent(59, false):post()
+            eventtap.event.newKeyEvent(59, false):post()
             reset() -- lift after double-tap was activated, reset to start
-            hs.alert.show("double tap lifted")
             return true
         end
-    elseif stage == 3 and ev:getType() == events.flagsChanged then
+    elseif stage == 3 then
         local flags = ev:getFlags()
 
         -- when a new flagsChanged event is generated, it sees that the cmd key is being held down. we want to filter that out, unless we actually press the (non-right) cmd key
@@ -46,8 +47,6 @@ eventWatcher = eventtap.new({ events.flagsChanged, events.keyDown }, function(ev
 
         flags["ctrl"] = true
         ev:setFlags(flags)
-        local keyInfo = ev:getKeyCode() .. "," .. keycodes.map[ev:getKeyCode()]
-        hs.alert.show(keyInfo) -- 54,rightcmd 59,ctrl
     end
     return false
 end):start()
