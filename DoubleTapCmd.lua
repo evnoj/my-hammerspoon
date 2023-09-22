@@ -1,65 +1,11 @@
-local notify   = require("hs.notify")
 local timer    = require("hs.timer")
 local eventtap = require("hs.eventtap")
-
 local events   = eventtap.event.types
 
--- Save this in your Hammerspoon configuration directiorn (~/.hammerspoon/)
--- You either override timeFrame and action here or after including this file from another, e.g.
---
--- ctrlDoublePress = require("ctrlDoublePress")
--- ctrlDoublePress.timeFrame = 2
--- ctrlDoublePress.action = function()
---    do something special
--- end
-
--- keycode we want to detect, from hs.keycodes.map
-originalKeyCode = 54 -- rightcmd
-replacementKeyCode = 59 -- ctrl
-
--- how quickly must the two single ctrl taps occur?
-timeFrame = .5
-
--- what to do when the double tap of ctrl occurs
-action = function()
-    notify.new({ title = "Hammerspoon", informativeText = key .. " double tap detected" }):send()
-end
-
-
--- Synopsis:
-
--- what we're looking for is 4 events within a set time period and no intervening other key events:
---  flagsChanged with only ctrl = true
---  flagsChanged with all = false
---  flagsChanged with only ctrl = true
---  flagsChanged with all = false
-
-
+local originalKeyCode = 54 -- rightcmd
+local replacementKeyCode = 59 -- ctrl
+local timeFrame = .5
 local timeInitiate, stage = 0, 0
-
--- verify that no keyboard flags are being pressed
-local noFlags = function(ev)
-    local result = true
-    for k, v in pairs(ev:getFlags()) do
-        if v then
-            result = false
-            break
-        end
-    end
-    return result
-end
-
--- verify that *only* the ctrl key flag is being pressed
-local onlyKey = function(ev)
-    local result = true
-    for k, v in pairs(ev:getFlags()) do
-        if k ~= key and v then
-            result = false
-            break
-        end
-    end
-    return result
-end
 
 local function reset()
     timeInitiate, stage = nil, nil
@@ -88,6 +34,20 @@ eventWatcher = eventtap.new({ events.flagsChanged, events.keyDown }, function(ev
             hs.alert.show("double tap lifted")
             return true
         end
+    elseif stage == 3 and ev:getType() == events.flagsChanged then
+        local flags = ev:getFlags()
+
+        -- when a new flagsChanged event is generated, it sees that the cmd key is being held down. we want to filter that out, unless we actually press the (non-right) cmd key
+        -- however, I haven't figured out a way of detecting how to then detect when it is lifted. It could be accomplished by storing another variable, but I don't think it matters enough to do that
+        -- the effect is that once 'cmd' is pressed while in stage 3, it won't get released until stage 3 resets
+        if ev:getKeyCode() ~= 55 then
+            flags["cmd"] = nil
+        end
+
+        flags["ctrl"] = true
+        ev:setFlags(flags)
+        local keyInfo = ev:getKeyCode() .. "," .. keycodes.map[ev:getKeyCode()]
+        hs.alert.show(keyInfo) -- 54,rightcmd 59,ctrl
     end
     return false
 end):start()
