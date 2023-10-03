@@ -19,11 +19,11 @@ keyTable[54] = {
     stage = nil
 }
 
---leftShift
-keyTable [1] = {
+--shift (left/non-right)
+keyTable[56] = {
     type="modTap",
-    pressKeyCode = 2, -- esc
-    pressKeyName = "esc",
+    pressKeyCode = 53, -- esc
+    pressKeyName = "escape",
     timeFrame = .2,
     timeInitiate = nil,
     down = false
@@ -33,12 +33,42 @@ local function reset()
     timeInitiate, stage = nil, nil
 end
 
+local function doDoubleTapModReplaceFlagsChanged(data)
+
+end
+
+local function doDoubleTapModReplaceKeyDown(data)
+
+end
+
+local function doModTapFlagsChanged(data)
+
+end
+
+local function doModTapKeyDown(data)
+
+end
+
+local eventProcessors = {
+    doubleTapModReplace = {
+        flagsChanged = doDoubleTapModReplaceFlagsChanged,
+        keyDown = doDoubleTapModReplaceKeyDown
+    },
+    modTap = {
+        flagsChanged = doModTapFlagsChanged,
+        keyDown = doModTapKeyDown
+    }
+}
+
 -- the watcher revolves around setting the current 'stage' of the the double press, and taking appropriate action based on the press made, the current stage, and the time since the stage cycle was initiated. the stage cycle is:
 -- stage = nil, inactive
 -- stage = 1, key pressed down first time
 -- stage = 2, key lifted first time
 -- stage = 3, key pressed down second time. once key is lifted while in stage 3, then stage = nil
 ModEventWatcher = eventtap.new({ events.flagsChanged }, function(ev)
+    for keyCode, data in keyTable do
+        eventProcessors[keyCode].flagsChanged(data)
+    end
     -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if a non-modifer key is pressed or if the time between presses exceeds the threshold
     if stage and stage ~= 3 and (timer.secondsSinceEpoch() - timeInitiate > timeFrame) then
         reset()
@@ -73,7 +103,11 @@ ModEventWatcher = eventtap.new({ events.flagsChanged }, function(ev)
     return false
 end):start()
 
-KeyEventWatcher = eventtap.new({ events.flagsChanged, events.keyDown }, function(ev)
+KeyEventWatcher = eventtap.new({ events.keyDown }, function(ev)
+    for keyCode, data in keyTable do
+        eventProcessors[keyCode].keyDown(data)
+    end
+
     -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if a non-modifer key is pressed or if the time between presses exceeds the threshold
     if stage and stage ~= 3 and (ev:getType() == events.keyDown or timer.secondsSinceEpoch() - timeInitiate > timeFrame) then
         reset()
