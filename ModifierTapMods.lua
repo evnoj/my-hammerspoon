@@ -19,15 +19,15 @@ local keyTable = {
         timeInitiate = nil,
         stage = nil
     },
-    { --shift (left/more accurately non-right)
-        type="modTap",
-        modKeyCode = 56,
-        pressKeyCode = 53, -- esc
-        pressKeyName = "escape",
-        timeFrame = .2,
-        timeInitiate = nil,
-        stage = nil
-    }
+    -- { --shift (left/more accurately non-right)
+    --     type="modTap",
+    --     modKeyCode = 56,
+    --     pressKeyCode = 53, -- esc
+    --     pressKeyName = "escape",
+    --     timeFrame = .2,
+    --     timeInitiate = nil,
+    --     stage = nil
+    -- }
 
 }
 
@@ -36,6 +36,7 @@ local function reset(configData)
 end
 
 local function doDoubleTapModReplaceFlagsChanged(configData, event)
+    -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if the time between presses exceeds the threshold
     if stage and stage ~= 3 and (timer.secondsSinceEpoch() -configData.timeInitiate > configData.timeFrame) then
         reset(configData)
     elseif event:getKeyCode() == configData.modKeyCode then
@@ -50,7 +51,7 @@ local function doDoubleTapModReplaceFlagsChanged(configData, event)
             return true
         elseif configData.stage == 3 then -- lift after double-tap was activated
             eventtap.event.newKeyEvent(configData.replacementKeyCode, false):post()
-            reset()
+            reset(configData)
             return true
         end
     elseif stage == 3 then -- other modifier key was pressed while double-tap is activated
@@ -66,10 +67,19 @@ local function doDoubleTapModReplaceFlagsChanged(configData, event)
         flags[configData.flagReplacement] = true
         event:setFlags(flags)
     end
+    return false
 end
 
 local function doDoubleTapModReplaceKeyDown(configData, event)
-
+    -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if a non-modifer key is pressed
+    if configData.stage and configData.stage ~=3 then
+        reset(configData)
+    elseif configData.stage == 3 then
+        local flags = event:getFlags()
+        flags[configData.flagReplacement] = true
+        event:setFlags(flags)
+    end
+    return false
 end
 
 local function doModTapFlagsChanged(configData, event)
@@ -97,9 +107,10 @@ local eventProcessors = {
 -- stage = 2, key lifted first time
 -- stage = 3, key pressed down second time. once key is lifted while in stage 3, then stage = nil
 ModEventWatcher = eventtap.new({ events.flagsChanged }, function(ev)
-    for keyCode, configData in keyTable do
-        eventProcessors[keyCode].flagsChanged(configData, ev)
+    for i,configData in ipairs(keyTable) do
+        return eventProcessors[configData.type].flagsChanged(configData, ev)
     end
+
     -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if a non-modifer key is pressed or if the time between presses exceeds the threshold
     if stage and stage ~= 3 and (timer.secondsSinceEpoch() - timeInitiate > timeFrame) then
         reset()
@@ -135,8 +146,8 @@ ModEventWatcher = eventtap.new({ events.flagsChanged }, function(ev)
 end):start()
 
 KeyEventWatcher = eventtap.new({ events.keyDown }, function(ev)
-    for keyCode, configData in keyTable do
-        eventProcessors[keyCode].keyDown(configData, ev)
+    for i,configData in ipairs(keyTable) do
+        return eventProcessors[configData.type].keyDown(configData, ev)
     end
 
     -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if a non-modifer key is pressed or if the time between presses exceeds the threshold
