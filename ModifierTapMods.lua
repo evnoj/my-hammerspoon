@@ -32,12 +32,13 @@ local keyTable = {
 }
 
 local function reset(configData)
-    configData.timeInitiate, configData.stage = nil, nil
+    configData.timeInitiate = nil
+    configData.stage = nil
 end
 
 local function doDoubleTapModReplaceFlagsChanged(configData, event)
     -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if the time between presses exceeds the threshold
-    if stage and stage ~= 3 and (timer.secondsSinceEpoch() -configData.timeInitiate > configData.timeFrame) then
+    if configData.stage and configData.stage ~= 3 and (timer.secondsSinceEpoch() - configData.timeInitiate > configData.timeFrame) then
         reset(configData)
     elseif event:getKeyCode() == configData.modKeyCode then
         if not configData.stage then -- first press down
@@ -54,7 +55,7 @@ local function doDoubleTapModReplaceFlagsChanged(configData, event)
             reset(configData)
             return true
         end
-    elseif stage == 3 then -- other modifier key was pressed while double-tap is activated
+    elseif configData.stage == 3 then -- other modifier key was pressed while double-tap is activated
         local flags = event:getFlags()
 
         -- when a new flagsChanged event is generated, it sees that the original key is being held down. we want to filter that out, unless we actually press a different keycode that generates the same modifier (i.e. left vs. right modifier)
@@ -107,64 +108,20 @@ local eventProcessors = {
 -- stage = 2, key lifted first time
 -- stage = 3, key pressed down second time. once key is lifted while in stage 3, then stage = nil
 ModEventWatcher = eventtap.new({ events.flagsChanged }, function(ev)
+    local dontPropagate = false;
     for i,configData in ipairs(keyTable) do
-        return eventProcessors[configData.type].flagsChanged(configData, ev)
+        if eventProcessors[configData.type].flagsChanged(configData, ev) then
+            dontPropagate = true;
+        end
     end
 
-    -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if a non-modifer key is pressed or if the time between presses exceeds the threshold
-    if stage and stage ~= 3 and (timer.secondsSinceEpoch() - timeInitiate > timeFrame) then
-        reset()
-    elseif ev:getKeyCode() == rightCmdKeyCode then
-        if not stage then
-            timeInitiate = timer.secondsSinceEpoch()
-            stage = 1 -- first press down
-        elseif stage == 1 then
-            stage = 2 -- lift up from first press
-        elseif stage == 2 then
-            stage = 3 -- second press down, activate alternative modifier
-            eventtap.event.newKeyEvent(59, true):post()
-            return true
-        elseif stage == 3 then
-            eventtap.event.newKeyEvent(59, false):post()
-            reset() -- lift after double-tap was activated, reset to start
-            return true
-        end
-    elseif stage == 3 then
-        local flags = ev:getFlags()
-
-        -- when a new flagsChanged event is generated, it sees that the cmd key is being held down. we want to filter that out, unless we actually press the (non-right) cmd key
-        -- however, I haven't figured out a way of detecting how to then detect when it is lifted. It could be accomplished by storing another variable, but I don't think it matters enough to do that
-        -- the effect is that once 'cmd' is pressed while in stage 3, it won't get released until stage 3 resets
-        if ev:getKeyCode() ~= 55 then
-            flags["cmd"] = nil
-        end
-
-        flags["ctrl"] = true
-        ev:setFlags(flags)
-    end
-    return false
+    return dontPropagate
 end):start()
 
 KeyEventWatcher = eventtap.new({ events.keyDown }, function(ev)
     for i,configData in ipairs(keyTable) do
-        return eventProcessors[configData.type].keyDown(configData, ev)
+        eventProcessors[configData.type].keyDown(configData, ev)
     end
 
-    -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if a non-modifer key is pressed or if the time between presses exceeds the threshold
-    if stage and stage ~= 3 and (ev:getType() == events.keyDown or timer.secondsSinceEpoch() - timeInitiate > timeFrame) then
-        reset()
-    elseif stage == 3 then
-        local flags = ev:getFlags()
-
-        -- when a new flagsChanged event is generated, it sees that the cmd key is being held down. we want to filter that out, unless we actually press the (non-right) cmd key
-        -- however, I haven't figured out a way of detecting how to then detect when it is lifted. It could be accomplished by storing another variable, but I don't think it matters enough to do that
-        -- the effect is that once 'cmd' is pressed while in stage 3, it won't get released until stage 3 resets
-        if ev:getKeyCode() ~= 55 then
-            flags["cmd"] = nil
-        end
-
-        flags["ctrl"] = true
-        ev:setFlags(flags)
-    end
     return false
 end):start()
