@@ -2,11 +2,6 @@ local timer    = require("hs.timer")
 local eventtap = require("hs.eventtap")
 local events   = eventtap.event.types
 
-local rightCmdKeyCode = 54 -- rightcmd
-local replacementKeyCode = 59 -- ctrl
-local timeFrame = .5
-local timeInitiate, stage = nil, nil
-
 local keyTable = {
     { --rightCmd (which is the cmd that capslock is set to via macOS settings)
         type="doubleTapModReplace",
@@ -99,9 +94,9 @@ local function doModTapFlagsChanged(configData, event)
             configData.timeInitiate = timer.secondsSinceEpoch()
             configData.stage = 1
         elseif configData.stage == 1 then -- lift from press, send replacement keypress
-            print("I triggered")
             eventtap.event.newKeyEvent(configData.pressKeyName, true):post()
             eventtap.event.newKeyEvent(configData.pressKeyName, false):post()
+            reset(configData)
         end
     end
 end
