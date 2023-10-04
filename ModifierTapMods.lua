@@ -58,8 +58,8 @@ local function doDoubleTapModReplaceFlagsChanged(configData, event)
     elseif configData.stage == 3 then -- other modifier key was pressed while double-tap is activated
         local flags = event:getFlags()
 
-        -- when a new flagsChanged event is generated, it sees that the original key is being held down. we want to filter that out, unless we actually press a different keycode that generates the same modifier (i.e. left vs. right modifier)
-        -- however, I haven't figured out a way of detecting how to then detect when it is lifted. It could be accomplished by storing another variable, but I don't think it matters enough to do that
+        -- when a new event is generated, it sees that the original key is being held down. we want to filter that out, unless we actually press a different keycode that generates the same modifier (i.e. left vs. right modifier)
+        -- however, I haven't figured out a way to then detect when it is lifted. It could be accomplished by storing another variable, but I don't think it matters enough to do that
         -- the effect is that if the modifier represented by the original key is set (by pressing a different keycode which generates that modifier) while in stage 3, it won't get released until stage 3 resets
         if event:getKeyCode() ~= configData.keyCodeThatSetsSameModifier then
             flags[configData.flagOriginal] = nil
@@ -77,6 +77,14 @@ local function doDoubleTapModReplaceKeyDown(configData, event)
         reset(configData)
     elseif configData.stage == 3 then
         local flags = event:getFlags()
+
+        -- when a new event is generated, it sees that the original key is being held down. we want to filter that out, unless we actually press a different keycode that generates the same modifier (i.e. left vs. right modifier)
+        -- however, I haven't figured out a way to then detect when it is lifted. It could be accomplished by storing another variable, but I don't think it matters enough to do that
+        -- the effect is that if the modifier represented by the original key is set (by pressing a different keycode which generates that modifier) while in stage 3, it won't get released until stage 3 resets
+        if event:getKeyCode() ~= configData.keyCodeThatSetsSameModifier then
+            flags[configData.flagOriginal] = nil
+        end
+
         flags[configData.flagReplacement] = true
         event:setFlags(flags)
     end
