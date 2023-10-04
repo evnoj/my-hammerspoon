@@ -19,15 +19,15 @@ local keyTable = {
         timeInitiate = nil,
         stage = nil
     },
-    -- { --shift (left/more accurately non-right)
-    --     type="modTap",
-    --     modKeyCode = 56,
-    --     pressKeyCode = 53, -- esc
-    --     pressKeyName = "escape",
-    --     timeFrame = .2,
-    --     timeInitiate = nil,
-    --     stage = nil
-    -- }
+    { --shift (left/more accurately non-right)
+        type="modTap",
+        modKeyCode = 56,
+        pressKeyCode = 53, -- esc
+        pressKeyName = "escape",
+        timeFrame = .1,
+        timeInitiate = nil,
+        stage = nil
+    }
 
 }
 
@@ -84,11 +84,24 @@ local function doDoubleTapModReplaceKeyDown(configData, event)
 end
 
 local function doModTapFlagsChanged(configData, event)
-
+    if configData.stage and (timer.secondsSinceEpoch() - configData.timeInitiate > configData.timeFrame) then
+        reset(configData)
+    elseif event:getKeyCode() == configData.modKeyCode then
+        if not configData.stage then -- press down
+            configData.timeInitiate = timer.secondsSinceEpoch()
+            configData.stage = 1
+        elseif configData.stage == 1 then -- lift from press, send replacement keypress
+            print("I triggered")
+            eventtap.event.newKeyEvent(configData.pressKeyName, true):post()
+            eventtap.event.newKeyEvent(configData.pressKeyName, false):post()
+        end
+    end
 end
 
-local function doModTapKeyDown(configData, event)
-
+local function doModTapKeyDown(configData)
+    if configData.stage then
+        reset(configData)
+    end
 end
 
 local eventProcessors = {
