@@ -36,7 +36,7 @@ local function doDoubleTapModReplaceFlagsChanged(configData, event)
     if configData.stage and configData.stage ~= 3 and (timer.secondsSinceEpoch() - configData.timeInitiate > configData.timeFrame) then
         reset(configData)
     elseif event:getKeyCode() == configData.modKeyCode then
-        if not configData.stage then -- first press down
+        if not configData.stage and event:getFlags()[configData.flagOriginal] then -- first press down
             configData.timeInitiate = timer.secondsSinceEpoch()
             configData.stage = 1
         elseif configData.stage == 1 then -- lift up from first press
