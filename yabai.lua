@@ -14,12 +14,18 @@ local function alt(key, commands)
 end
 
 local function floatWarpRight()
+  local jsonString = hs.execute("/usr/local/bin/yabai -m query --displays --display")
+  print(jsonString)
 end
+
+hs.hotkey.bind({ "alt" }, "m", function()
+  floatWarpRight()
+end)
 
 -- operations on floating windows
 alt("j", { "window --grid 1:2:0:0:1:1" })
 alt("l", { "window --grid 1:2:1:0:1:1" })
-alt("m", { "space --toggle mission-control" })
+-- alt("m", { "query --displays --display" })
 alt("p", { "window --toggle pip" })
 alt("g", { "space --toggle padding", "space --toggle gap" })
 alt("r", { "space --rotate 90" })
