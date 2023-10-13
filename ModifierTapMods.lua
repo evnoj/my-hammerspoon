@@ -19,7 +19,7 @@ local keyTable = {
         modKeyCode = 56,
         pressKeyCode = 53, -- esc
         pressKeyName = "escape",
-        timeFrame = .1,
+        timeFrame = .2,
         timeInitiate = nil,
         stage = nil
     }
