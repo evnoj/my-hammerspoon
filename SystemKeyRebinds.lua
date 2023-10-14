@@ -1,3 +1,5 @@
+-- this was a bad implementation and has been replaced by Hotkeys.lua
+
 local eventtap = require("hs.eventtap")
 local events   = eventtap.event.types
 
