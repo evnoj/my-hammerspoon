@@ -10,6 +10,15 @@ local bindings = {
         newKey = "h",
         newKeycode = 4,
         exclusive = true
+    },
+    becauseHide = { -- this lets use use cmd-h as a shortcut in apps, remember that cmd-h actually sends alt-h to the OS
+        ogMods = { "cm" },
+        ogKey = "h",
+        ogKeycode = 4,
+        newMods = { "alt" },
+        newKey = "h",
+        newKeycode = 4,
+        exclusive = true
     }
 }
 
@@ -35,7 +44,7 @@ local function processBinding(event, bind)
 end
 
 KeypressWatcher = eventtap.new({ events.keyDown }, function(ev)
-    for i, bind in ipairs(bindings) do
+    for name, bind in pairs(bindings) do
         local found = processBinding(ev, bind)
         if found then
             return true
