@@ -9,10 +9,12 @@ local vMidiDevice    = midi.newVirtualSource("HammerspoonMidi") -- this is a vir
 local midiDataTables = {
     down = {
         channel = 0,
+        controllerNumber = 80,
         controllerValue = 63
     },
     up = {
         channel = 0,
+        controllerNumber = 80,
         controllerValue = 65
     }
 }
