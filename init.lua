@@ -4,10 +4,7 @@ local ReloadConfig = require('ReloadConfig')
 local ModifierTapMods = require('ModifierTapMods')
 local Hotkeys = require('Hotkeys')
 local WindowGrid = require('WindowGrid')
--- local yabai = require('yabai')
+local MidiScroll = require("MidiScroll")
 -- local ViewKeyInfo = require('ViewKeyInfo')
 -- local TerminalCmdToCtrl = require('TerminalCmdToCtrl')
 -- local scratchpad = require('scratchpad')
-
--- SPOONS
--- hs.loadSpoon(VolumeScroll)
