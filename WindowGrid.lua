@@ -12,11 +12,10 @@ local positionLastSet
 -- change its dimension here
 local GRID_SIZE = 2
 local HALF_GRID_SIZE = GRID_SIZE / 2
--- Set the grid size and add a few pixels of margin
--- Also, don't animate window changes... That's too slow
-hs.grid.setGrid(GRID_SIZE .. 'x' .. GRID_SIZE)
-hs.grid.setMargins({ 0, 0 })
-hs.window.animationDuration = 0
+
+grid.setGrid(GRID_SIZE .. 'x' .. GRID_SIZE)
+grid.setMargins({ 0, 0 })
+window.animationDuration = 0
 
 local screenPositions       = {}
 screenPositions.full        = {
@@ -77,22 +76,10 @@ screenPositions.bottomRight = {
 -- This function will move either the specified or the focuesd
 -- window to the requested screen position
 local function moveWindowToPosition(screenPosition)
-    focusedWindow = window.focusedWindow()
+    local focusedWindow = window.focusedWindow()
     grid.set(focusedWindow, screenPosition)
     positionLastSet = screenPosition
     timeOfLastSnap = timer.secondsSinceEpoch()
-end
-
--- This function will move either the specified or the focused
--- window to the center of the sreen and let it fill up the
--- entire screen.
-local function windowMaximize(window)
-    if window == nil then
-        window = hs.window.focusedWindow()
-    end
-    if window then
-        window:maximize()
-    end
 end
 
 hs.hotkey.bind({ "alt" }, "l", function()
