@@ -17,6 +17,7 @@ local keyTable = {
     { --shift (left/more accurately non-right)
         type="modTap",
         modKeyCode = 56,
+        flagOriginal = "shift",
         pressKeyCode = 53, -- esc
         pressKeyName = "escape",
         timeFrame = .2,
@@ -89,16 +90,20 @@ end
 local function doModTapFlagsChanged(configData, event)
     if configData.stage and (timer.secondsSinceEpoch() - configData.timeInitiate > configData.timeFrame) then
         reset(configData)
+        print("reset")
     elseif event:getKeyCode() == configData.modKeyCode then
-        if not configData.stage then -- press down
+        if not configData.stage and event:getFlags()[configData.flagOriginal] then -- press down
             configData.timeInitiate = timer.secondsSinceEpoch()
             configData.stage = 1
         elseif configData.stage == 1 then -- lift from press, send replacement keypress
             eventtap.event.newKeyEvent(configData.pressKeyName, true):post()
             eventtap.event.newKeyEvent(configData.pressKeyName, false):post()
             reset(configData)
+            print("esc sent")
+            return true
         end
     end
+    return false
 end
 
 local function doModTapKeyDown(configData)
@@ -138,6 +143,6 @@ KeyEventWatcher = eventtap.new({ events.keyDown }, function(ev)
     for i,configData in ipairs(keyTable) do
         eventProcessors[configData.type].keyDown(configData, ev)
     end
-
+    print('yo')
     return false
 end):start()
