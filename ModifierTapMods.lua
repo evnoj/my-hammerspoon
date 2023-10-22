@@ -5,7 +5,9 @@ local events   = eventtap.event.types
 local keyTable = {
     { --rightCmd (which is the cmd that capslock is set to via macOS settings)
         type="doubleTapModReplace",
-        modKeyCode = 54,
+        modKeyCodes = {
+            [54] = true
+        },
         flagOriginal = "cmd",
         replacementKeyCode = 59, -- ctrl
         flagReplacement = "ctrl",
@@ -16,7 +18,9 @@ local keyTable = {
     },
     { --shift (left/more accurately non-right)
         type="modTap",
-        modKeyCode = 56,
+        modKeyCodes = {
+            [56] = true
+        },
         flagOriginal = "shift",
         pressKeyCode = 53, -- esc
         pressKeyName = "escape",
@@ -36,7 +40,7 @@ local function doDoubleTapModReplaceFlagsChanged(configData, event)
     -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if the time between presses exceeds the threshold
     if configData.stage and configData.stage ~= 3 and (timer.secondsSinceEpoch() - configData.timeInitiate > configData.timeFrame) then
         reset(configData)
-    elseif event:getKeyCode() == configData.modKeyCode then
+    elseif configData.modKeyCodes[event:getKeyCode()] then
         if not configData.stage and event:getFlags()[configData.flagOriginal] then -- first press down
             configData.timeInitiate = timer.secondsSinceEpoch()
             configData.stage = 1
@@ -90,7 +94,7 @@ end
 local function doModTapFlagsChanged(configData, event)
     if configData.stage and (timer.secondsSinceEpoch() - configData.timeInitiate > configData.timeFrame) then
         reset(configData)
-    elseif event:getKeyCode() == configData.modKeyCode then
+    elseif configData.modKeyCodes[event:getKeyCode()] then
         if not configData.stage and event:getFlags()[configData.flagOriginal] then -- press down
             configData.timeInitiate = timer.secondsSinceEpoch()
             configData.stage = 1
