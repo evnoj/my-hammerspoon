@@ -90,7 +90,6 @@ end
 local function doModTapFlagsChanged(configData, event)
     if configData.stage and (timer.secondsSinceEpoch() - configData.timeInitiate > configData.timeFrame) then
         reset(configData)
-        print("reset")
     elseif event:getKeyCode() == configData.modKeyCode then
         if not configData.stage and event:getFlags()[configData.flagOriginal] then -- press down
             configData.timeInitiate = timer.secondsSinceEpoch()
@@ -99,7 +98,6 @@ local function doModTapFlagsChanged(configData, event)
             eventtap.event.newKeyEvent(configData.pressKeyName, true):post()
             eventtap.event.newKeyEvent(configData.pressKeyName, false):post()
             reset(configData)
-            print("esc sent")
             return true
         end
     end
@@ -143,6 +141,5 @@ KeyEventWatcher = eventtap.new({ events.keyDown }, function(ev)
     for i,configData in ipairs(keyTable) do
         eventProcessors[configData.type].keyDown(configData, ev)
     end
-    print('yo')
     return false
 end):start()
