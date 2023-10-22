@@ -4,20 +4,39 @@ local events   = eventtap.event.types
 
 local keyTable = {
     { --rightCmd (which is the cmd that capslock is set to via macOS settings)
-        type="doubleTapModReplace",
+        type = "doubleTapModReplace",
         modKeyCodes = {
             [54] = true
         },
         flagOriginal = "cmd",
-        replacementKeyCode = 59, -- ctrl
-        flagReplacement = "ctrl",
+        replacementKeyCodes = {
+            [59] = true --ctrl
+        },
+        flagReplacement = {
+            ctrl = true
+        },
         keyCodeThatSetsSameModifier = 55, -- non-right cmd (just cmd)
         timeFrame = .5,
+        filterOriginalFlag = true,
         timeInitiate = nil,
         stage = nil
     },
+    -- { --rightCmd (which is the cmd that capslock is set to via macOS settings)
+    --     type="doubleTapModReplace",
+    --     modKeyCodes = {
+    --         [58] = true,
+    --         [61] = true
+    --     },
+    --     flagOriginal = "alt",
+    --     replacementKeyCode = 59, -- ctrl
+    --     flagReplacement = "ctrl",
+    --     keyCodeThatSetsSameModifier = 55, -- non-right cmd (just cmd)
+    --     timeFrame = .5,
+    --     timeInitiate = nil,
+    --     stage = nil
+    -- },
     { --shift (left/more accurately non-right)
-        type="modTap",
+        type = "modTap",
         modKeyCodes = {
             [56] = true
         },
@@ -48,24 +67,30 @@ local function doDoubleTapModReplaceFlagsChanged(configData, event)
             configData.stage = 2
         elseif configData.stage == 2 then -- second press down, activate alternative modifier
             configData.stage = 3
-            eventtap.event.newKeyEvent(configData.replacementKeyCode, true):post()
+            for keyCode in pairs(configData.replacementKeyCodes) do
+                eventtap.event.newKeyEvent(keyCode, true):post()
+            end
             return true
         elseif configData.stage == 3 then -- lift after double-tap was activated
-            eventtap.event.newKeyEvent(configData.replacementKeyCode, false):post()
+            for keyCode in pairs(configData.replacementKeyCodes) do
+                eventtap.event.newKeyEvent(keyCode, false):post()
+            end
             reset(configData)
             return true
         end
     elseif configData.stage == 3 then -- other modifier key was pressed while double-tap is activated
         local flags = event:getFlags()
 
-        -- when a new event is generated, it sees that the original key is being held down. we want to filter that out, unless we actually press a different keycode that generates the same modifier (i.e. left vs. right modifier)
+        -- when a new event is generated, it sees that the original key is being held down. we want to filter that out, unless we actually press a different keycode that generates the same modifier (i.e. left vs. right modifier), or
         -- however, I haven't figured out a way to then detect when it is lifted. It could be accomplished by storing another variable, but I don't think it matters enough to do that
         -- the effect is that if the modifier represented by the original key is set (by pressing a different keycode which generates that modifier) while in stage 3, it won't get released until stage 3 resets
-        if event:getKeyCode() ~= configData.keyCodeThatSetsSameModifier then
+        if configData.filterOriginalFlag and event:getKeyCode() ~= configData.keyCodeThatSetsSameModifier then
             flags[configData.flagOriginal] = nil
         end
 
-        flags[configData.flagReplacement] = true
+        for flag in pairs(configData.flagReplacement) do
+            flags[flag] = true
+        end
         event:setFlags(flags)
     end
     return false
@@ -73,7 +98,7 @@ end
 
 local function doDoubleTapModReplaceKeyDown(configData, event)
     -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if a non-modifer key is pressed
-    if configData.stage and configData.stage ~=3 then
+    if configData.stage and configData.stage ~= 3 then
         reset(configData)
     elseif configData.stage == 3 then
         local flags = event:getFlags()
@@ -81,11 +106,13 @@ local function doDoubleTapModReplaceKeyDown(configData, event)
         -- when a new event is generated, it sees that the original key is being held down. we want to filter that out, unless we actually press a different keycode that generates the same modifier (i.e. left vs. right modifier)
         -- however, I haven't figured out a way to then detect when it is lifted. It could be accomplished by storing another variable, but I don't think it matters enough to do that
         -- the effect is that if the modifier represented by the original key is set (by pressing a different keycode which generates that modifier) while in stage 3, it won't get released until stage 3 resets
-        if event:getKeyCode() ~= configData.keyCodeThatSetsSameModifier then
+        if configData.filterOriginalFlag and event:getKeyCode() ~= configData.keyCodeThatSetsSameModifier then
             flags[configData.flagOriginal] = nil
         end
 
-        flags[configData.flagReplacement] = true
+        for flag in pairs(configData.flagReplacement) do
+            flags[flag] = true
+        end
         event:setFlags(flags)
     end
     return false
@@ -102,7 +129,6 @@ local function doModTapFlagsChanged(configData, event)
             eventtap.event.newKeyEvent(configData.pressKeyName, true):post()
             eventtap.event.newKeyEvent(configData.pressKeyName, false):post()
             reset(configData)
-            return true
         end
     end
     return false
@@ -132,7 +158,7 @@ local eventProcessors = {
 -- stage = 3, key pressed down second time. once key is lifted while in stage 3, then stage = nil
 ModEventWatcher = eventtap.new({ events.flagsChanged }, function(ev)
     local dontPropagate = false;
-    for i,configData in ipairs(keyTable) do
+    for i, configData in ipairs(keyTable) do
         if eventProcessors[configData.type].flagsChanged(configData, ev) then
             dontPropagate = true;
         end
@@ -142,7 +168,7 @@ ModEventWatcher = eventtap.new({ events.flagsChanged }, function(ev)
 end):start()
 
 KeyEventWatcher = eventtap.new({ events.keyDown }, function(ev)
-    for i,configData in ipairs(keyTable) do
+    for i, configData in ipairs(keyTable) do
         eventProcessors[configData.type].keyDown(configData, ev)
     end
     return false
