@@ -21,20 +21,28 @@ local keyTable = {
         timeInitiate = nil,
         stage = nil
     },
-    -- { --rightCmd (which is the cmd that capslock is set to via macOS settings)
-    --     type="doubleTapModReplace",
-    --     modKeyCodes = {
-    --         [58] = true,
-    --         [61] = true
-    --     },
-    --     flagOriginal = "alt",
-    --     replacementKeyCode = 59, -- ctrl
-    --     flagReplacement = "ctrl",
-    --     keyCodeThatSetsSameModifier = 55, -- non-right cmd (just cmd)
-    --     timeFrame = .5,
-    --     timeInitiate = nil,
-    --     stage = nil
-    -- },
+    { --rightCmd (which is the cmd that capslock is set to via macOS settings)
+        type = "doubleTapModReplace",
+        modKeyCodes = {
+            [58] = true,
+            [61] = true
+        },
+        flagOriginal = "alt",
+        replacementKeyCodes = {
+            [59] = true, -- ctrl
+            [55] = true, -- cmd
+        },
+        flagReplacement = {
+            alt = true,
+            ctrl = true,
+            cmd = true
+        },
+        keyCodeThatSetsSameModifier = nil,
+        timeFrame = .5,
+        filterOriginalFlag = false,
+        timeInitiate = nil,
+        stage = nil
+    },
     { --shift (left/more accurately non-right)
         type = "modTap",
         modKeyCodes = {
@@ -70,13 +78,17 @@ local function doDoubleTapModReplaceFlagsChanged(configData, event)
             for keyCode in pairs(configData.replacementKeyCodes) do
                 eventtap.event.newKeyEvent(keyCode, true):post()
             end
-            return true
+            if configData.filterOriginalFlag then
+                return true
+            end
         elseif configData.stage == 3 then -- lift after double-tap was activated
             for keyCode in pairs(configData.replacementKeyCodes) do
                 eventtap.event.newKeyEvent(keyCode, false):post()
             end
             reset(configData)
-            return true
+            if configData.filterOriginalFlag then
+                return true
+            end
         end
     elseif configData.stage == 3 then -- other modifier key was pressed while double-tap is activated
         local flags = event:getFlags()
