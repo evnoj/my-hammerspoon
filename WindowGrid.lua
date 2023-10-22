@@ -14,7 +14,7 @@ local GRID_SIZE = 2
 local HALF_GRID_SIZE = GRID_SIZE / 2
 
 grid.setGrid(GRID_SIZE .. 'x' .. GRID_SIZE)
-grid.setMargins({ 0, 0 })
+grid.setMargins({0, 0})
 window.animationDuration = 0
 
 local screenPositions       = {}
@@ -78,6 +78,15 @@ screenPositions.bottomRight = {
 local function moveWindowToPosition(screenPosition)
     local focusedWindow = window.focusedWindow()
     grid.set(focusedWindow, screenPosition)
+
+    -- this is necessary because of a bug in hs.grid that does not properly account for resolutions that are not evenly divisble by the grid size, leaving an extra pixel between the bottom of the window and the bottom of the screen when it is half-height
+    if screenPosition.h == 1 and screenPosition.y == 1 then
+        local focusedWindow = window.focusedWindow()
+        local focusedWindowFrame = focusedWindow:frame()
+        focusedWindowFrame.h = focusedWindowFrame.h + 1
+        focusedWindow:setFrameInScreenBounds(focusedWindowFrame)
+    end
+
     positionLastSet = screenPosition
     timeOfLastSnap = timer.secondsSinceEpoch()
 end
