@@ -97,7 +97,7 @@ local function moveWindowToPosition(screenPosition)
     timeOfLastSnap = timer.secondsSinceEpoch()
 end
 
-hs.hotkey.bind({ "alt" }, "l", function()
+hs.hotkey.bind({ "ctrl, cmd, alt" }, "l", function()
     if timer.secondsSinceEpoch() - timeOfLastSnap < timeThreshold then
         if positionLastSet == screenPositions.top then
             moveWindowToPosition(screenPositions.topRight)
@@ -111,7 +111,7 @@ hs.hotkey.bind({ "alt" }, "l", function()
     end
 end)
 
-hs.hotkey.bind({ "alt" }, "j", function()
+hs.hotkey.bind({ "ctrl, cmd, alt" }, "j", function()
     if timer.secondsSinceEpoch() - timeOfLastSnap < timeThreshold then
         if positionLastSet == screenPositions.top then
             moveWindowToPosition(screenPositions.topLeft)
@@ -125,7 +125,7 @@ hs.hotkey.bind({ "alt" }, "j", function()
     end
 end)
 
-hs.hotkey.bind({ "alt" }, "i", function()
+hs.hotkey.bind({ "ctrl, cmd, alt" }, "i", function()
     if timer.secondsSinceEpoch() - timeOfLastSnap < timeThreshold then
         if positionLastSet == screenPositions.right then
             moveWindowToPosition(screenPositions.topRight)
@@ -137,7 +137,7 @@ hs.hotkey.bind({ "alt" }, "i", function()
     end
 end)
 
-hs.hotkey.bind({ "alt" }, "k", function()
+hs.hotkey.bind({ "ctrl, cmd, alt" }, "k", function()
     if timer.secondsSinceEpoch() - timeOfLastSnap < timeThreshold then
         if positionLastSet == screenPositions.right then
             moveWindowToPosition(screenPositions.bottomRight)
@@ -149,6 +149,6 @@ hs.hotkey.bind({ "alt" }, "k", function()
     end
 end)
 
-hs.hotkey.bind({ "alt" }, ";", function()
+hs.hotkey.bind({ "ctrl, cmd, alt" }, ";", function()
     moveWindowToPosition(screenPositions.full)
 end)
