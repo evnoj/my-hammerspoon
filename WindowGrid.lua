@@ -10,7 +10,7 @@ local positionLastSet
 -- To easily layout windows on the screen, we use hs.grid to create
 -- a 4x4 grid. If you want to use a more detailed grid, simply
 -- change its dimension here
-local GRID_SIZE = 2
+local GRID_SIZE = 4
 local HALF_GRID_SIZE = GRID_SIZE / 2
 
 grid.setGrid(GRID_SIZE .. 'x' .. GRID_SIZE)
@@ -72,6 +72,12 @@ screenPositions.bottomRight = {
     w = HALF_GRID_SIZE,
     h = HALF_GRID_SIZE
 }
+screenPositions.centerTall = {
+    x = HALF_GRID_SIZE / 2,
+    y = 0,
+    w = HALF_GRID_SIZE,
+    h = GRID_SIZE
+}
 
 -- This function will move either the specified or the focuesd
 -- window to the requested screen position
@@ -97,6 +103,8 @@ hs.hotkey.bind({ "alt" }, "l", function()
             moveWindowToPosition(screenPositions.topRight)
         elseif positionLastSet == screenPositions.bottom then
             moveWindowToPosition(screenPositions.bottomRight)
+        elseif positionLastSet == screenPositions.left then
+            moveWindowToPosition(screenPositions.centerTall)
         end
     else
         moveWindowToPosition(screenPositions.right)
@@ -109,6 +117,8 @@ hs.hotkey.bind({ "alt" }, "j", function()
             moveWindowToPosition(screenPositions.topLeft)
         elseif positionLastSet == screenPositions.bottom then
             moveWindowToPosition(screenPositions.bottomLeft)
+        elseif positionLastSet == screenPositions.right then
+            moveWindowToPosition(screenPositions.centerTall)
         end
     else
         moveWindowToPosition(screenPositions.left)
