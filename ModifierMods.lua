@@ -181,7 +181,7 @@ local function doModReplaceKeyDown(configData, event)
 
         -- when a new event is generated, it sees that the original key is being held down. we want to filter that out, unless we actually press a different keycode that generates the same modifier (i.e. left vs. right modifier)
         -- however, I haven't figured out a way to then detect when it is lifted. It could be accomplished by storing another variable, but I don't think it matters enough to do that
-        -- the effect is that if the modifier represented by the original key is set (by pressing a different keycode which generates that modifier) while in stage 3, it won't get released until stage 3 resets
+        -- the effect is that if the modifier represented by the original key is set (by pressing a different keycode which generates that modifier) while in the active stage, it won't get released until the active stage resets
         if configData.filterOriginalFlag and event:getKeyCode() ~= configData.keyCodeThatSetsSameModifier then
             flags[configData.flagOriginal] = nil
         end
@@ -217,6 +217,10 @@ local function doModTapKeyDown(configData)
 end
 
 local eventProcessors = {
+    modReplace = {
+        flagsChanged = doModReplaceFlagsChanged,
+        keyDown = doModReplaceKeyDown
+    },
     doubleTapHoldMod = {
         flagsChanged = doDoubleTapHoldModFlagsChanged,
         keyDown = doDoubleTapHoldModKeyDown
@@ -244,7 +248,14 @@ ModEventWatcher = eventtap.new({ events.flagsChanged }, function(ev)
 end):start()
 
 KeyEventWatcher = eventtap.new({ events.keyDown }, function(ev)
-    for i, configData in ipairs(mappings) do
+    activeApp = hs.application.frontmostApplication()
+    for i, configData in ipairs(mappings.all) do
+        if not configData.appExceptions[activeApp] then
+            eventProcessors[configData.type].keyDown(configData, ev)
+        end
+    end
+
+    for i, configData in ipairs(mappings[activeApp]) do
         eventProcessors[configData.type].keyDown(configData, ev)
     end
     return false
