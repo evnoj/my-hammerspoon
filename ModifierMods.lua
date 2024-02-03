@@ -3,60 +3,62 @@ local eventtap = require("hs.eventtap")
 local events   = eventtap.event.types
 
 local mappings = {
-    all = { --rightCmd (which is the cmd that capslock is set to via macOS settings) double tap and hold for ctrl
-        type = "doubleTapHoldMod",
-        modKeyCodes = {
-            [54] = true
+    all = {
+        { --rightCmd (which is the cmd that capslock is set to via macOS settings) double tap and hold for ctrl
+            type = "doubleTapHoldMod",
+            modKeyCodes = {
+                [54] = true
+            },
+            flagOriginal = "cmd",
+            replacementKeyCodes = {
+                [59] = true --ctrl
+            },
+            flagReplacement = {
+                ctrl = true
+            },
+            keyCodeThatSetsSameModifier = 55, -- non-right cmd (just cmd)
+            timeFrame = .5,
+            filterOriginalFlag = true,
+            appExceptions = {
+                kitty = true
+            },
+            timeInitiate = nil,
+            stage = nil
         },
-        flagOriginal = "cmd",
-        replacementKeyCodes = {
-            [59] = true --ctrl
+        { --alt double tap and hold for alt+cmd+ctrl
+            type = "doubleTapHoldMod",
+            modKeyCodes = {
+                [58] = true,
+                [61] = true
+            },
+            flagOriginal = "alt",
+            replacementKeyCodes = {
+                [59] = true, -- ctrl
+                [55] = true, -- cmd
+            },
+            flagReplacement = {
+                alt = true,
+                ctrl = true,
+                cmd = true
+            },
+            keyCodeThatSetsSameModifier = nil,
+            timeFrame = .5,
+            filterOriginalFlag = false,
+            timeInitiate = nil,
+            stage = nil
         },
-        flagReplacement = {
-            ctrl = true
-        },
-        keyCodeThatSetsSameModifier = 55, -- non-right cmd (just cmd)
-        timeFrame = .5,
-        filterOriginalFlag = true,
-        appExceptions = {
-            kitty = true
-        },
-        timeInitiate = nil,
-        stage = nil
-    },
-    { --alt double tap and hold for alt+cmd+ctrl
-        type = "doubleTapHoldMod",
-        modKeyCodes = {
-            [58] = true,
-            [61] = true
-        },
-        flagOriginal = "alt",
-        replacementKeyCodes = {
-            [59] = true, -- ctrl
-            [55] = true, -- cmd
-        },
-        flagReplacement = {
-            alt = true,
-            ctrl = true,
-            cmd = true
-        },
-        keyCodeThatSetsSameModifier = nil,
-        timeFrame = .5,
-        filterOriginalFlag = false,
-        timeInitiate = nil,
-        stage = nil
-    },
-    { --shift (left/more accurately non-right) tap for esc
-        type = "modTap",
-        modKeyCodes = {
-            [56] = true
-        },
-        flagOriginal = "shift",
-        pressKeyCode = 53, -- esc
-        pressKeyName = "escape",
-        timeFrame = .2,
-        timeInitiate = nil,
-        stage = nil
+        { --shift (left/more accurately non-right) tap for esc
+            type = "modTap",
+            modKeyCodes = {
+                [56] = true
+            },
+            flagOriginal = "shift",
+            pressKeyCode = 53, -- esc
+            pressKeyName = "escape",
+            timeFrame = .2,
+            timeInitiate = nil,
+            stage = nil
+        }
     },
     kitty = {
         {
@@ -71,7 +73,7 @@ local mappings = {
             flagReplacement = {
                 ctrl = true
             },
-            keyCodeThatSetsSameModifier = nil,
+            keyCodeThatSetsSameModifier = 55, -- non-right cmd (just cmd)
             filterOriginalFlag = true,
             stage = nil
         }
@@ -151,6 +153,46 @@ local function doDoubleTapHoldModKeyDown(configData, event)
 end
 
 local function doModReplaceFlagsChanged(configData, event)
+    if configData.modKeyCodes[event:getKeyCode()] then
+        if not configData.stage and event:getFlags()[configData.flagOriginal] then -- press down
+            configData.timeInitiate = timer.secondsSinceEpoch()
+            configData.stage = 1
+            for keyCode in pairs(configData.replacementKeyCodes) do
+                eventtap.event.newKeyEvent(keyCode, true):post()
+            end
+            if configData.filterOriginalFlag then
+                return true
+            end
+        elseif configData.stage == 1 then -- lift
+            for keyCode in pairs(configData.replacementKeyCodes) do
+                eventtap.event.newKeyEvent(keyCode, false):post()
+            end
+            reset(configData)
+            if configData.filterOriginalFlag then
+                return true
+            end
+        end
+    end
+end
+
+local function doModReplaceKeyDown(configData, event)
+    if configData.stage == 1 then
+        local flags = event:getFlags()
+
+        -- when a new event is generated, it sees that the original key is being held down. we want to filter that out, unless we actually press a different keycode that generates the same modifier (i.e. left vs. right modifier)
+        -- however, I haven't figured out a way to then detect when it is lifted. It could be accomplished by storing another variable, but I don't think it matters enough to do that
+        -- the effect is that if the modifier represented by the original key is set (by pressing a different keycode which generates that modifier) while in stage 3, it won't get released until stage 3 resets
+        if configData.filterOriginalFlag and event:getKeyCode() ~= configData.keyCodeThatSetsSameModifier then
+            flags[configData.flagOriginal] = nil
+        end
+
+        for flag in pairs(configData.flagReplacement) do
+            flags[flag] = true
+        end
+        event:setFlags(flags)
+    end
+    return false
+end
 
 local function doModTapFlagsChanged(configData, event)
     if configData.stage and (timer.secondsSinceEpoch() - configData.timeInitiate > configData.timeFrame) then
