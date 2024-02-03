@@ -2,9 +2,9 @@ local timer    = require("hs.timer")
 local eventtap = require("hs.eventtap")
 local events   = eventtap.event.types
 
-local keyTable = {
-    { --rightCmd (which is the cmd that capslock is set to via macOS settings)
-        type = "doubleTapModReplace",
+local mappings = {
+    all = { --rightCmd (which is the cmd that capslock is set to via macOS settings) double tap and hold for ctrl
+        type = "doubleTapHoldMod",
         modKeyCodes = {
             [54] = true
         },
@@ -18,11 +18,14 @@ local keyTable = {
         keyCodeThatSetsSameModifier = 55, -- non-right cmd (just cmd)
         timeFrame = .5,
         filterOriginalFlag = true,
+        appExceptions = {
+            kitty = true
+        },
         timeInitiate = nil,
         stage = nil
     },
-    { --rightCmd (which is the cmd that capslock is set to via macOS settings)
-        type = "doubleTapModReplace",
+    { --alt double tap and hold for alt+cmd+ctrl
+        type = "doubleTapHoldMod",
         modKeyCodes = {
             [58] = true,
             [61] = true
@@ -43,7 +46,7 @@ local keyTable = {
         timeInitiate = nil,
         stage = nil
     },
-    { --shift (left/more accurately non-right)
+    { --shift (left/more accurately non-right) tap for esc
         type = "modTap",
         modKeyCodes = {
             [56] = true
@@ -54,8 +57,25 @@ local keyTable = {
         timeFrame = .2,
         timeInitiate = nil,
         stage = nil
+    },
+    kitty = {
+        {
+            type = "modReplace",
+            modKeyCodes {
+                [54] = true
+            },
+            flagOriginal = "cmd",
+            replacementKeyCodes = {
+                [59] = true
+            },
+            flagReplacement = {
+                ctrl = true
+            },
+            keyCodeThatSetsSameModifier = nil,
+            filterOriginalFlag = true,
+            stage = nil
+        }
     }
-
 }
 
 local function reset(configData)
@@ -63,7 +83,7 @@ local function reset(configData)
     configData.stage = nil
 end
 
-local function doDoubleTapModReplaceFlagsChanged(configData, event)
+local function doDoubleTapHoldModFlagsChanged(configData, event)
     -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if the time between presses exceeds the threshold
     if configData.stage and configData.stage ~= 3 and (timer.secondsSinceEpoch() - configData.timeInitiate > configData.timeFrame) then
         reset(configData)
@@ -93,7 +113,7 @@ local function doDoubleTapModReplaceFlagsChanged(configData, event)
     elseif configData.stage == 3 then -- other modifier key was pressed while double-tap is activated
         local flags = event:getFlags()
 
-        -- when a new event is generated, it sees that the original key is being held down. we want to filter that out, unless we actually press a different keycode that generates the same modifier (i.e. left vs. right modifier), or
+        -- when a new event is generated, it sees that the original key is being held down. we want to filter that out, unless we actually press a different keycode that generates the same modifier (i.e. left vs. right modifier)
         -- however, I haven't figured out a way to then detect when it is lifted. It could be accomplished by storing another variable, but I don't think it matters enough to do that
         -- the effect is that if the modifier represented by the original key is set (by pressing a different keycode which generates that modifier) while in stage 3, it won't get released until stage 3 resets
         if configData.filterOriginalFlag and event:getKeyCode() ~= configData.keyCodeThatSetsSameModifier then
@@ -108,7 +128,7 @@ local function doDoubleTapModReplaceFlagsChanged(configData, event)
     return false
 end
 
-local function doDoubleTapModReplaceKeyDown(configData, event)
+local function doDoubleTapHoldModKeyDown(configData, event)
     -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if a non-modifer key is pressed
     if configData.stage and configData.stage ~= 3 then
         reset(configData)
@@ -129,6 +149,8 @@ local function doDoubleTapModReplaceKeyDown(configData, event)
     end
     return false
 end
+
+local function doModReplaceFlagsChanged(configData, event)
 
 local function doModTapFlagsChanged(configData, event)
     if configData.stage and (timer.secondsSinceEpoch() - configData.timeInitiate > configData.timeFrame) then
@@ -153,9 +175,9 @@ local function doModTapKeyDown(configData)
 end
 
 local eventProcessors = {
-    doubleTapModReplace = {
-        flagsChanged = doDoubleTapModReplaceFlagsChanged,
-        keyDown = doDoubleTapModReplaceKeyDown
+    doubleTapHoldMod = {
+        flagsChanged = doDoubleTapHoldModFlagsChanged,
+        keyDown = doDoubleTapHoldModKeyDown
     },
     modTap = {
         flagsChanged = doModTapFlagsChanged,
@@ -170,7 +192,7 @@ local eventProcessors = {
 -- stage = 3, key pressed down second time. once key is lifted while in stage 3, then stage = nil
 ModEventWatcher = eventtap.new({ events.flagsChanged }, function(ev)
     local dontPropagate = false;
-    for i, configData in ipairs(keyTable) do
+    for i, configData in ipairs(mappings) do
         if eventProcessors[configData.type].flagsChanged(configData, ev) then
             dontPropagate = true;
         end
@@ -180,7 +202,7 @@ ModEventWatcher = eventtap.new({ events.flagsChanged }, function(ev)
 end):start()
 
 KeyEventWatcher = eventtap.new({ events.keyDown }, function(ev)
-    for i, configData in ipairs(keyTable) do
+    for i, configData in ipairs(mappings) do
         eventProcessors[configData.type].keyDown(configData, ev)
     end
     return false
