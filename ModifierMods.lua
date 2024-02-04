@@ -337,8 +337,6 @@ ModEventWatcher = eventtap.new({ events.flagsChanged }, function(ev)
     end
 
     local dontPropagate = false;
-    activeApp = application.frontmostApplication():name()
-
     for i, configData in ipairs(mappings.all) do
         if (not configData.appExceptions[activeApp]) and eventProcessors[configData.type].flagsChanged(configData, ev) then
             dontPropagate = true;
@@ -356,7 +354,6 @@ ModEventWatcher = eventtap.new({ events.flagsChanged }, function(ev)
 end):start()
 
 KeyEventWatcher = eventtap.new({ events.keyDown }, function(ev)
-    activeApp = application.frontmostApplication():name()
     for i, configData in ipairs(mappings.all) do
         if not configData.appExceptions[activeApp] then
             eventProcessors[configData.type].keyDown(configData, ev)
