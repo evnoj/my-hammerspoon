@@ -81,6 +81,9 @@ local mappings           = {
             keyCodeThatSetsSameModifier = 55, -- non-right cmd (just cmd)
             timeFrame = .5,
             filterOriginalFlag = true,
+            keyExceptions = { -- these keys will not use the replaced modifer when pressed while the key is held, they will use the original
+                [49] = true   -- space, for cmd+space spotlight
+            },
             stage = nil,
             timeInitiate = nil,
             replacementActive = false
@@ -169,11 +172,11 @@ local function doModReplaceWithDoubleTapHoldFlagsChanged(configData, event)
     -- print("stage: "..tostring(configData.stage))
     -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if the time between presses exceeds the threshold
     if configData.stage and configData.stage ~= 3 and (timer.secondsSinceEpoch() - configData.timeInitiate > configData.timeFrame) then
-    --     print("reseting double press stage")
+        --     print("reseting double press stage")
         reset(configData)
     end
     if configData.modKeyCodes[event:getKeyCode()] then
-    --     print("keycode detected statement entered")
+        --     print("keycode detected statement entered")
         -- do stuff related to tracking the double press
         if not configData.stage and event:getFlags()[configData.flagOriginal] then -- first press down
             configData.timeInitiate = timer.secondsSinceEpoch()
@@ -182,11 +185,11 @@ local function doModReplaceWithDoubleTapHoldFlagsChanged(configData, event)
             configData.stage = 2
         elseif configData.stage == 2 then -- second press down, let the event propagate
             configData.stage = 3
-    --         print(tostring(rand) .. "," .. tostring(179))
+            --         print(tostring(rand) .. "," .. tostring(179))
             return false
         elseif configData.stage == 3 then -- lift after double-tap was activated
             reset(configData)
-    --         print(tostring(rand) .. "," .. tostring(183))
+            --         print(tostring(rand) .. "," .. tostring(183))
             return false
         end
 
@@ -197,24 +200,21 @@ local function doModReplaceWithDoubleTapHoldFlagsChanged(configData, event)
                 eventtap.event.newKeyEvent(keyCode, true):setProperty(userdataPropertyId, userdataTag):post()
             end
             if configData.filterOriginalFlag then
-    --             print(tostring(rand) .. "," .. tostring(195))
+                --             print(tostring(rand) .. "," .. tostring(195))
                 return true
             end
         elseif configData.replacementActive then -- lift
-    --         print('lifted statement entered')
+            --         print('lifted statement entered')
             for keyCode in pairs(configData.replacementKeyCodes) do
                 eventtap.event.newKeyEvent(keyCode, false):setProperty(userdataPropertyId, userdataTag):post()
             end
             configData.replacementActive = false
             if configData.filterOriginalFlag then
-    --             print(tostring(rand) .. "," .. tostring(205))
+                --             print(tostring(rand) .. "," .. tostring(205))
                 return true
             end
         end
     end
-
-
-
     -- print(rand)
     return false
 end
@@ -223,18 +223,23 @@ local function doModReplaceWithDoubleTapHoldKeyDown(configData, event)
     -- handle the normal replacement
     if configData.replacementActive then
         local flags = event:getFlags()
+        local keycode = event:getKeyCode()
+        if configData.keyExceptions[keycode] then
+            flags[configData.flagReplacement] = nil
+            flags[configData.flagOriginal] = true
+        else
+            -- when a new event is generated, it sees that the original key is being held down. we want to filter that out, unless we actually press a different keycode that generates the same modifier (i.e. left vs. right modifier)
+            -- however, I haven't figured out a way to then detect when it is lifted. It could be accomplished by storing another variable, but I don't think it matters enough to do that
+            -- the effect is that if the modifier represented by the original key is set (by pressing a different keycode which generates that modifier) while in the active stage, it won't get released until the active stage resets
+            if configData.filterOriginalFlag and event:getKeyCode() ~= configData.keyCodeThatSetsSameModifier then
+                flags[configData.flagOriginal] = nil
+            end
 
-        -- when a new event is generated, it sees that the original key is being held down. we want to filter that out, unless we actually press a different keycode that generates the same modifier (i.e. left vs. right modifier)
-        -- however, I haven't figured out a way to then detect when it is lifted. It could be accomplished by storing another variable, but I don't think it matters enough to do that
-        -- the effect is that if the modifier represented by the original key is set (by pressing a different keycode which generates that modifier) while in the active stage, it won't get released until the active stage resets
-        if configData.filterOriginalFlag and event:getKeyCode() ~= configData.keyCodeThatSetsSameModifier then
-            flags[configData.flagOriginal] = nil
+            for flag in pairs(configData.flagReplacement) do
+                flags[flag] = true
+            end
+            event:setFlags(flags)
         end
-
-        for flag in pairs(configData.flagReplacement) do
-            flags[flag] = true
-        end
-        event:setFlags(flags)
     end
 
     -- if in sequence, and not in final stage where the modifier is being held after double tapping, reset if a non-modifer key is pressed
