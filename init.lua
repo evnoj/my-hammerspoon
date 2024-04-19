@@ -1,3 +1,4 @@
+require("hs.ipc")
 local CloseNotifications = require('CloseNotifications')
 local Caffeine = require('Caffeine')
 local ReloadConfig = require('ReloadConfig')
