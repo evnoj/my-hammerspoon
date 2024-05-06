@@ -17,3 +17,5 @@ activeApp = ""
 hs.window.filter.default:subscribe(hs.window.filter.windowFocused, function(window, appName)
     activeApp = window:application():name()
 end)
+
+hs.alert.show("hammerspoon loaded")
