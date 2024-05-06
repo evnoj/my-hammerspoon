@@ -1,4 +1,4 @@
-require("hs.ipc")
+require("hs.ipc") -- enables CLI vs 'hs' command
 local CloseNotifications = require('CloseNotifications')
 local Caffeine = require('Caffeine')
 local ReloadConfig = require('ReloadConfig')
@@ -6,6 +6,7 @@ local ModifierMods = require('ModifierMods')
 local Hotkeys = require('Hotkeys')
 local WindowGrid = require('WindowGrid')
 local MidiScroll = require("MidiScroll")
+local UsbWatcher = require("UsbWatcher")
 -- local ViewKeyInfo = require('ViewKeyInfo')
 -- local TerminalCmdToCtrl = require('TerminalCmdToCtrl')
 -- local scratchpad = require('scratchpad')
