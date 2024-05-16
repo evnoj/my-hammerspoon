@@ -81,8 +81,35 @@ local mappings           = {
             keyCodeThatSetsSameModifier = 55, -- non-right cmd (just cmd)
             timeFrame = .5,
             filterOriginalFlag = true,
-            keyExceptions = { -- these keys will not use the replaced modifer when pressed while the key is held, they will use the original
-                [49] = true   -- space, for cmd+space spotlight
+            keyExceptions = { -- these key combos will not use the replaced modifer when pressed while the key is held, they will use the original. their table value specifies the modifiers that must be held, and should at a minimum include the same modifier in 'flagOriginal', or else the exception will never be triggered. TODO: come up with a good way to not have to do this
+                [49] = {      -- space, for cmd+space spotlight
+                    cmd = true
+                },
+                [123] = { -- 123-126 are arrow keys, cmd+alt+shift+arrow is charmstone
+                    cmd = true,
+                    alt = true,
+                    shift = true,
+                    fn = true -- for an unkown reason the fn flag is also set when pressing cmd+shift+alt+arrow key, this was discovered by inspecting the generated events
+                },
+                [124] = {
+                    cmd = true,
+                    alt = true,
+                    shift = true,
+                    fn = true
+                },
+                [125] = {
+                    cmd = true,
+                    alt = true,
+                    shift = true,
+                    fn = true
+                },
+                [126] = {
+                    cmd = true,
+                    alt = true,
+                    shift = true,
+                    fn = true
+                }
+
             },
             stage = nil,
             timeInitiate = nil,
@@ -164,7 +191,7 @@ local function doDoubleTapHoldModKeyDown(configData, event)
 end
 
 local function doModReplaceWithDoubleTapHoldFlagsChanged(configData, event)
-    local rand = math.random(1000)
+    -- local rand = math.random(1000)
     -- print(rand)
     -- print("flag is cmd: " .. tostring(event:getFlags()["cmd"]))
     -- print("replacementActive: " .. tostring(configData.replacementActive))
@@ -219,12 +246,30 @@ local function doModReplaceWithDoubleTapHoldFlagsChanged(configData, event)
     return false
 end
 
+local function flagsEqual(tableA, tableB)
+    -- print('running flagsequal')
+    for flag in pairs(tableA) do
+        -- print('tableA:'..flag)
+        if not tableB[flag] then
+            return false
+        end
+    end
+    for flag in pairs(tableB) do
+        -- print('tableB:'..flag)
+        if not tableA[flag] then
+            return false
+        end
+    end
+
+    return true
+end
+
 local function doModReplaceWithDoubleTapHoldKeyDown(configData, event)
     -- handle the normal replacement
     if configData.replacementActive then
         local flags = event:getFlags()
         local keycode = event:getKeyCode()
-        if configData.keyExceptions[keycode] then
+        if configData.keyExceptions[keycode] and flagsEqual(configData.keyExceptions[keycode], flags) then
             flags[configData.flagReplacement] = nil
             flags[configData.flagOriginal] = true
         else
@@ -321,6 +366,8 @@ local eventProcessors = {
         flagsChanged = doDoubleTapHoldModFlagsChanged,
         keyDown = doDoubleTapHoldModKeyDown
     },
+    -- a modifier key instead triggers a different modifier (ex. pressing the cmd key sets the ctrl modifier flag for keypresses generated while the modifier key is held down, instead of setting the cmd modifier flag as it normally would).
+    -- doing a double tap on the modifier key and holding it on the 2nd tap will cause the original modifier (the same as the name of the key) to be set (ex. double-tap and holding the cmd key will cause the cmd flag to be set, instead of replacing it with ctrl)
     modReplaceWithDoubleTapHold = {
         flagsChanged = doModReplaceWithDoubleTapHoldFlagsChanged,
         keyDown = doModReplaceWithDoubleTapHoldKeyDown
