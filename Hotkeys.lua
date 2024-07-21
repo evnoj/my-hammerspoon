@@ -1,8 +1,8 @@
 local eventtap = require("hs.eventtap")
 local keycodes = require("hs.keycodes")
 
--- to use hyper-h as the global macOS 'hide' command
-hs.hotkey.bind({ "ctrl, cmd, alt" }, "h", function()
+-- to use hyper-' as the global macOS 'hide' command
+hs.hotkey.bind({ "ctrl, cmd, alt" }, "'", function()
     hs.application.frontmostApplication():hide()
 end)
 
