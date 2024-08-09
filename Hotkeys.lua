@@ -7,10 +7,22 @@ hs.hotkey.bind({ "ctrl, cmd, alt" }, "'", function()
 end)
 
 -- send ctrl+f2 to focus the menubar when it is hidden
-hs.hotkey.bind({ "shift,cmd,alt" }, "m", function()
-    print("i did it")
-    eventtap.event.newKeyEvent(keycodes.map.ctrl, true):post()
-    eventtap.event.newKeyEvent("f2", true):post()
-    eventtap.event.newKeyEvent("f2", false):post()
-    eventtap.event.newKeyEvent(keycodes.map.ctrl, false):post()
+-- 2024/08/09: doesnt seem to be working, using shift+cmd+? to show menu bar
+-- hs.hotkey.bind({ "shift,cmd,alt" }, "m", function()
+--     print("i did it")
+--     eventtap.event.newKeyEvent(keycodes.map.ctrl, true):post()
+--     eventtap.event.newKeyEvent("f2", true):post()
+--     eventtap.event.newKeyEvent("f2", false):post()
+--     eventtap.event.newKeyEvent(keycodes.map.ctrl, false):post()
+-- end)
+
+-- fn+c opens control center, to view currently playing media
+hs.hotkey.bind({ "ctrl, cmd, alt"}, "c", function()
+    hs.osascript.applescript([[
+        tell application "System Events"
+            key down 63
+            key code 8
+            key up 63
+        end tell
+    ]])
 end)
