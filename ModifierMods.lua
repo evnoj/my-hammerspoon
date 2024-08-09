@@ -85,6 +85,10 @@ local mappings           = {
                 [49] = {      -- space, for cmd+space spotlight
                     cmd = true
                 },
+                [44] = { -- NOT WORKING: '/', for shift+cmd+? to show help menu for active app, side effect of showing menubar
+                    cmd = true,
+                    shift = true
+                },
                 [123] = { -- 123-126 are arrow keys, cmd+alt+shift+arrow is charmstone
                     cmd = true,
                     alt = true,
