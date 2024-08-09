@@ -17,7 +17,9 @@ end)
 -- end)
 
 -- fn+c opens control center, to view currently playing media
+-- 
 hs.hotkey.bind({ "ctrl, cmd, alt"}, "c", function()
+    os.execute("sleep " .. tonumber(.5)) -- if the hyper stuff is held when this executes, it causes issues. TODO: better solution integrating w/ ModifierMods
     hs.osascript.applescript([[
         tell application "System Events"
             key down 63
