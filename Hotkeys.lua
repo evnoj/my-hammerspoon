@@ -1,9 +1,10 @@
 local eventtap = require("hs.eventtap")
 local keycodes = require("hs.keycodes")
 
--- to use hyper-' as the global macOS 'hide' command
+-- to use hyper-' as the global macOS 'hide' command (switched to minimize)
 hs.hotkey.bind({ "ctrl, cmd, alt" }, "'", function()
-    hs.application.frontmostApplication():hide()
+    -- hs.application.frontmostApplication():hide()
+    hs.window.focusedWindow():minimize()
 end)
 
 -- send ctrl+f2 to focus the menubar when it is hidden
