@@ -1,5 +1,6 @@
 // Modified from
 // https://gist.github.com/lancethomps/a5ac103f334b171f70ce2ff983220b4f
+// as of macOS Sequoia, this is no longer working. See './CloseNotifications.applescript' for a working script
 "use strict";
 
 function run() {
