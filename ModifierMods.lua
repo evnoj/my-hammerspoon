@@ -23,7 +23,8 @@ local mappings           = {
             timeFrame = .5,
             filterOriginalFlag = true,
             appExceptions = {
-                kitty = true
+                kitty = true,
+                WezTerm = true
             },
             timeInitiate = nil,
             stage = nil
@@ -66,6 +67,61 @@ local mappings           = {
         }
     },
     kitty = {
+        { --rightcmd (sent by capslock when mapped via macOS settings) replace w/ ctrl
+            type = "modReplaceWithDoubleTapHold",
+            modKeyCodes = {
+                [54] = true
+            },
+            flagOriginal = "cmd",
+            replacementKeyCodes = {
+                [59] = true
+            },
+            flagReplacement = {
+                ctrl = true
+            },
+            keyCodeThatSetsSameModifier = 55, -- non-right cmd (just cmd)
+            timeFrame = .5,
+            filterOriginalFlag = true,
+            keyExceptions = { -- these key combos will not use the replaced modifer when pressed while the key is held, they will use the original. their table value specifies the modifiers that must be held, and should at a minimum include the same modifier in 'flagOriginal', or else the exception will never be triggered. TODO: come up with a good way to not have to do this
+                [49] = {      -- space, for cmd+space spotlight
+                    cmd = true
+                },
+                [44] = { -- NOT WORKING: '/', for shift+cmd+? to show help menu for active app, side effect of showing menubar
+                    cmd = true,
+                    shift = true
+                },
+                [123] = { -- 123-126 are arrow keys, cmd+alt+shift+arrow is charmstone
+                    cmd = true,
+                    alt = true,
+                    shift = true,
+                    fn = true -- for an unkown reason the fn flag is also set when pressing cmd+shift+alt+arrow key, this was discovered by inspecting the generated events
+                },
+                [124] = {
+                    cmd = true,
+                    alt = true,
+                    shift = true,
+                    fn = true
+                },
+                [125] = {
+                    cmd = true,
+                    alt = true,
+                    shift = true,
+                    fn = true
+                },
+                [126] = {
+                    cmd = true,
+                    alt = true,
+                    shift = true,
+                    fn = true
+                }
+
+            },
+            stage = nil,
+            timeInitiate = nil,
+            replacementActive = false
+        }
+    },
+    WezTerm = {
         { --rightcmd (sent by capslock when mapped via macOS settings) replace w/ ctrl
             type = "modReplaceWithDoubleTapHold",
             modKeyCodes = {
@@ -392,7 +448,7 @@ ModEventWatcher = eventtap.new({ events.flagsChanged }, function(ev)
         return false
     end
 
-    local dontPropagate = false;
+    local dontPropagate = false
     for i, configData in ipairs(mappings.all) do
         if (not configData.appExceptions[activeApp]) and eventProcessors[configData.type].flagsChanged(configData, ev) then
             dontPropagate = true;
@@ -401,7 +457,8 @@ ModEventWatcher = eventtap.new({ events.flagsChanged }, function(ev)
 
     if mappings[activeApp] then
         for i, configData in ipairs(mappings[activeApp]) do
-            if eventProcessors[configData.type].flagsChanged(configData, ev) then
+            result = eventProcessors[configData.type].flagsChanged(configData, ev)
+            if result then
                 dontPropagate = true;
             end
         end
