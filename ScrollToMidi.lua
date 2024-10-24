@@ -5,7 +5,7 @@ local events         = eventtap.event.types
 local modifiers      = eventtap.event.newScrollEvent({ 0, 0 }, { "ctrl", "alt", "cmd" })
 local flags          = modifiers:getFlags()
 
-local vMidiDevice    = midi.newVirtualSource("HammerspoonMidi") -- this is a virtual midi source  set up in Audio Midi Setup native macOS app
+local vMidiDevice    = midi.newVirtualSource("Hammerspoon Midi") -- this is a virtual midi source  set up in Audio Midi Setup native macOS app
 local midiDataTables = {
     down = {
         channel = 0,
