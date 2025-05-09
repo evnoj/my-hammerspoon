@@ -44,15 +44,25 @@ end)
 --     eventtap.event.newKeyEvent(keycodes.map.ctrl, false):post()
 -- end)
 
--- fn+c opens control center, to view currently playing media
--- 
-hs.hotkey.bind({ "ctrl, cmd, alt"}, "c", function()
-    os.execute("sleep " .. tonumber(.5)) -- if the hyper stuff is held when this executes, it causes issues. TODO: better solution integrating w/ ModifierMods
-    hs.osascript.applescript([[
-        tell application "System Events"
-            key down 63
-            key code 8
-            key up 63
-        end tell
-    ]])
+-- opens control center, to view currently playing media
+-- seems like not working, haven't used
+-- hs.hotkey.bind({ "ctrl, cmd, alt"}, "c", function()
+--     os.execute("sleep " .. tonumber(.5)) -- if the hyper stuff is held when this executes, it causes issues. TODO: better solution integrating w/ ModifierMods
+--     hs.osascript.applescript([[
+--         tell application "System Events"
+--             key down 63
+--             key code 8
+--             key up 63
+--         end tell
+--     ]])
+-- end)
+
+hs.hotkey.bind({ "alt" }, "pageup", function()
+    eventtap.event.newKeyEvent("home", true):post()
+    eventtap.event.newKeyEvent("home", false):post()
+end)
+
+hs.hotkey.bind({ "alt" }, "pagedown", function()
+    eventtap.event.newKeyEvent("end", true):post()
+    eventtap.event.newKeyEvent("end", false):post()
 end)
