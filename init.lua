@@ -1,4 +1,5 @@
 require("hs.ipc") -- enables CLI vs 'hs' command
+local AppWatcher = require("AppWatcher")
 local CloseNotifications = require('CloseNotifications')
 local Caffeine = require('Caffeine')
 local ReloadConfig = require('ReloadConfig')
