@@ -83,6 +83,10 @@ local mappings           = {
             timeFrame = .5,
             filterOriginalFlag = true,
             keyExceptions = { -- these key combos will not use the replaced modifer when pressed while the key is held, they will use the original. their table value specifies the modifiers that must be held, and should at a minimum include the same modifier in 'flagOriginal', or else the exception will never be triggered. TODO: come up with a good way to not have to do this
+                [21] = { -- 4, to take screenshots with shift+cmd+4
+                   cmd = true,
+                   shift = true
+                },
                 [49] = {      -- space, for cmd+space spotlight
                     cmd = true
                 },

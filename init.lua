@@ -8,7 +8,7 @@ local WindowGrid = require('WindowGrid')
 local ScrollToMidi = require("ScrollToMidi")
 local UsbWatcher = require("UsbWatcher")
 -- local ViewKeyInfo = require('ViewKeyInfo')
--- local TerminalCmdToCtrl = require('TerminalCmdToCtrl')
+local TerminalCmdToCtrl = require('TerminalCmdToCtrl')
 -- local scratchpad = require('scratchpad')
 
 -- set active application when it switches for any script to use
