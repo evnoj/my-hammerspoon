@@ -4,7 +4,6 @@
 local handlers = {}
 handlers["Pixelmator Pro Trial"] = {}
 handlers["Pixelmator Pro Trial"][hs.application.watcher.launching] = function(app)
-    hs.alert("launching pixelmator")
     hs.application.launchOrFocus("/Applications/Inklet.app")
 end
 handlers["Pixelmator Pro Trial"][hs.application.watcher.terminated] = function(app)
