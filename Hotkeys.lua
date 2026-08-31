@@ -11,6 +11,12 @@ hs.hotkey.bind({ "ctrl, cmd, alt" }, "/", function()
     hs.application.frontmostApplication():hide()
 end)
 
+-- don't remember why I made this
+-- hs.hotkey.bind({ "cmd" }, "h",
+--     function() eventtap.event.newKeyEvent({ "cmd", "alt" }, "1", true):post()  end,  -- pressedfn
+--     function() eventtap.event.newKeyEvent({ "cmd", "alt" }, "1", false):post() end   -- releasedfn
+-- )
+
 -- failed experiment to send a string of keys, unknown why not working
 -- hs.hotkey.bind({ "ctrl, alt" }, "9", function()
 --     os.execute("sleep 5")
