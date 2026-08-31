@@ -10,6 +10,7 @@ local ScrollToMidi = require("ScrollToMidi")
 local UsbWatcher = require("UsbWatcher")
 -- local ViewKeyInfo = require('ViewKeyInfo')
 local TerminalCmdToCtrl = require('TerminalCmdToCtrl')
+local FunctionKeysMultimedia = require('FunctionKeysMultimedia')
 -- local scratchpad = require('scratchpad')
 
 -- set active application when it switches for any script to use
